@@ -1,0 +1,21 @@
+Magpie is a tool that performs a program transformation on C code to use a precise garbage collector. In a nutshell, it changes calls from malloc to GC_malloc and removes calls to free() from the code. 
+
+Magpie is written in Ocaml and uses the Cil framework.
+
+This work was funded by the NSF.
+
+See https://www.cs.utah.edu/~rafkind/gc/magpie/
+
+Q. Why does the GC abort with an error like 
+ASSERTION FAILURE(build-gc/gc/gc_implementation.c,2016): Dirty write to unknown page.
+
+A. This is when a pointer is written to where the value of the pointer is to memory outside of the memory explicitly allocated by the garbage collector. The most common reason for this is GC_initialize() has not been called. The transformation should add a call to GC_initialize() at the start of main() but if this is taken out or the --dont-init argument is given to CIL then you must manually add a call to GC_initialize() somewhere in your program before you start allocating memory.
+
+Another reason may be that there are some allocators in your program that have not been converted to some variant of GC_malloc. Removing malloc wrappers from your code and using plain malloc/realloc/calloc is usually the best idea. It is ok to use functions that perform their own allocation/deallocation. In that case the GC will ignore those objects completely.
+
+Q. I have calls to xmalloc that are not converted to GC_malloc. Why is this?
+A. xmalloc is a wrapper for malloc but the transformation's default malloc function is 'malloc'. You can set the malloc functions the transformation will see with the --malloc flag. Give multiple function names seperated by a comma.
+Example: cilly --doallocanalysis --malloc xmalloc,my_malloc,malloc2 file.c
+
+Q. When I debug a program that has been transformed to use the GC I get a lot of SIGSEGV signals. Is this a bug?
+A. No, in general the SIGSEGV signal is sent to the program when it access memory that it does not have access to. The garbage collector uses memory access to know when certain pages of memory need to be traversed, i.e a dirty page. Unless the pointer being accessed is NULL it is ok to ignore SIGSEGV in your debugging session. If something really bad happens you will get an error about "Dirty write to unknown page", see above.
