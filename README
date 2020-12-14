@@ -4,7 +4,10 @@ Magpie is written in Ocaml and uses the Cil framework.
 
 This work was funded by the NSF.
 
-See https://www.cs.utah.edu/~rafkind/gc/magpie/
+Paper about magpie: Precise garbage collection for C
+
+https://dl.acm.org/doi/10.1145/1542431.1542438
+
 
 Q. Why does the GC abort with an error like 
 ASSERTION FAILURE(build-gc/gc/gc_implementation.c,2016): Dirty write to unknown page.
